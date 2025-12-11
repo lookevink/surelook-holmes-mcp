@@ -1,1 +1,1 @@
-# -surelook-holmes-mcp
+# surelook-holmes-mcp
