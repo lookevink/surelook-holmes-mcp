@@ -1,4 +1,8 @@
 import os
+import warnings
+
+# Suppress Pydantic deprecation warnings from dependencies
+warnings.filterwarnings("ignore", message=".*PydanticDeprecatedSince20.*")
 from typing import List, Optional, Dict, Any
 from fastmcp import FastMCP
 from supabase import create_client, Client
@@ -9,7 +13,7 @@ load_dotenv()
 
 # Initialize Supabase client
 SUPABASE_URL = os.getenv("PUBLIC_SUPABASE_URL")
-SUPABASE_KEY = os.getenv("PUBLIC_SUPABASE_PUBLISHABLE_KEY")
+SUPABASE_KEY = os.getenv("PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     print("Warning: SUPABASE_URL and SUPABASE_KEY (or PUBLIC variants) environment variables must be set.")
