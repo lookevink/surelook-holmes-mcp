@@ -32,31 +32,6 @@ RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 mcp = FastMCP("Surelook Holmes")
 
 @mcp.tool()
-def list_sessions(limit: int = 10) -> List[Dict[str, Any]]:
-    """List recent sessions from the database."""
-    if not supabase:
-        return [{"error": "Supabase client not initialized"}]
-    
-    response = supabase.table("sessions").select("*").order("created_at", desc=True).limit(limit).execute()
-    return response.data
-
-@mcp.tool()
-def get_session(session_id: str) -> Dict[str, Any]:
-    """Get a specific session by ID."""
-    if not supabase:
-        return {"error": "Supabase client not initialized"}
-    
-    response = supabase.table("sessions").select("*").eq("id", session_id).single().execute()
-    return response.data
-
-@mcp.tool()
-def list_identities(limit: int = 10) -> List[Dict[str, Any]]:
-    """List identities from the database."""
-    if not supabase:
-        return [{"error": "Supabase client not initialized"}]
-    
-    response = supabase.table("identities").select("*").limit(limit).execute()
-@mcp.tool()
 def get_identity(identity_id: str) -> Dict[str, Any]:
     """Get a specific identity by ID."""
     if not supabase:
