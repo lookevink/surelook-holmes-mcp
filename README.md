@@ -36,6 +36,7 @@ A Model Context Protocol (MCP) server for Surelook Holmes, built with `fastmcp` 
    ```env
    PUBLIC_SUPABASE_URL=your_project_url
    PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_public_key
+   RAPIDAPI_KEY=your_rapidapi_key
    ```
 
 ## Running the Server

@@ -2,6 +2,7 @@ import os
 import warnings
 import platform
 import sys
+import requests
 
 # Suppress Pydantic deprecation warnings from dependencies (supabase/storage3)
 try:
@@ -33,6 +34,9 @@ try:
 except Exception as e:
     print(f"Failed to initialize Supabase client: {e}")
     supabase = None
+
+# GET RAPIDAPI_KEY from environment
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 
 # Create an MCP server
 mcp = FastMCP("Surelook Holmes")
@@ -104,6 +108,68 @@ def create_event(
     response = supabase.table("events").insert(data).execute()
     return response.data[0] if response.data else {}
 
+
+@mcp.tool()
+def who_is_this(linkedin_url: str) -> Dict[str, Any]:
+    """
+    Identify a person from their LinkedIn URL and get their latest post.
+    
+    Args:
+        linkedin_url: The full LinkedIn profile URL.
+    """
+    if not RAPIDAPI_KEY:
+        return {"error": "RAPIDAPI_KEY not set in environment"}
+
+    url = "https://fresh-linkedin-profile-data.p.rapidapi.com/enrich-lead"
+    querystring = {
+        "linkedin_url": linkedin_url,
+        "include_skills": "false",
+        "include_certifications": "false", 
+        "include_publications": "false",
+        "include_honors": "false",
+        "include_volunteers": "false",
+        "include_projects": "false",
+        "include_patents": "false",
+        "include_courses": "false",
+        "include_organizations": "false",
+        "include_profile_status": "false",
+        "include_company_public_url": "false"
+    }
+
+    headers = {
+        "x-rapidapi-host": "fresh-linkedin-profile-data.p.rapidapi.com",
+        "x-rapidapi-key": RAPIDAPI_KEY
+    }
+
+    try:
+        response = requests.get(url, headers=headers, params=querystring)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Extract relevant info
+        # Note: Structure depends on API response. Assuming standard fields like 'full_name' or 'data' -> ...
+        # Based on service usage, data is usually at top level or in 'data' field.
+        # I'll return the whole data if structure is unknown, but user wants name/post.
+        # Let's try to extract cleanly if possible, or fallback to returning specific fields found.
+        
+        result = {
+            "full_name": data.get("full_name") or f"{data.get('first_name', '')} {data.get('last_name', '')}".strip(),
+            "headline": data.get("headline"),
+            "summary": data.get("summary"),
+            # API might not return posts in this specific endpoint unless 'include_posts' (not listed in curl) or separate call.
+            # I'll define 'latest_post' as None if not found, or maybe 'last_activity'
+            "latest_post": None 
+        }
+        
+        # Attempt to find post/activity info if available in response
+        # Sometimes it's in 'recent_activity' or 'posts'
+        if "posts" in data and isinstance(data["posts"], list) and len(data["posts"]) > 0:
+            result["latest_post"] = data["posts"][0]
+            
+        return result
+
+    except Exception as e:
+        return {"error": f"Failed to fetch LinkedIn data: {str(e)}"}
 @mcp.resource("system://info")
 def system_info() -> str:
    """
