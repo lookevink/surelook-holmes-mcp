@@ -34,8 +34,8 @@ A Model Context Protocol (MCP) server for Surelook Holmes, built with `fastmcp` 
 
    Create a `.env` file in the project root:
    ```env
-   SUPABASE_URL=your_project_url
-   SUPABASE_KEY=your_public_anon_key
+   PUBLIC_SUPABASE_URL=your_project_url
+   PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_public_key
    ```
 
 ## Running the Server
