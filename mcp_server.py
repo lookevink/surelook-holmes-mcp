@@ -154,7 +154,7 @@ def get_notes(identity_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     if not supabase:
         return [{"error": "Supabase client not initialized"}]
     
-    response = supabase.table("events").select("*").eq("related_identity_id", identity_id).eq("type", "CONVERSATION_NOTE").order("created_at", desc=True).limit(limit).execute()
+    response = supabase.table("events").select("*").eq("related_identity_id", identity_id).eq("type", "NOTES").order("created_at", desc=True).limit(limit).execute()
     return response.data
 
 @mcp.tool()
