@@ -56,7 +56,51 @@ def list_identities(limit: int = 10) -> List[Dict[str, Any]]:
         return [{"error": "Supabase client not initialized"}]
     
     response = supabase.table("identities").select("*").limit(limit).execute()
+@mcp.tool()
+def get_identity(identity_id: str) -> Dict[str, Any]:
+    """Get a specific identity by ID."""
+    if not supabase:
+        return {"error": "Supabase client not initialized"}
+    
+    response = supabase.table("identities").select("*").eq("id", identity_id).single().execute()
     return response.data
+
+@mcp.tool()
+def update_identity(
+    identity_id: str,
+    name: Optional[str] = None,
+    relationship_status: Optional[str] = None,
+    linkedin_url: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Update an identity.
+    
+    Args:
+        identity_id: The UUID of the identity to update.
+        name: New name (optional).
+        relationship_status: New relationship status (optional).
+        linkedin_url: New LinkedIn URL (optional).
+        metadata: New metadata dictionary (optional, merges or replaces depending on supabase behavior, usually replaces top level keys).
+    """
+    if not supabase:
+        return {"error": "Supabase client not initialized"}
+    
+    updates = {}
+    if name is not None:
+        updates["name"] = name
+    if relationship_status is not None:
+        updates["relationship_status"] = relationship_status
+    if linkedin_url is not None:
+        updates["linkedin_url"] = linkedin_url
+    if metadata is not None:
+        updates["metadata"] = metadata
+        
+    if not updates:
+        return {"error": "No updates provided"}
+        
+    response = supabase.table("identities").update(updates).eq("id", identity_id).execute()
+    return response.data[0] if response.data else {}
 
 @mcp.tool()
 def get_events(session_id: str, limit: int = 50) -> List[Dict[str, Any]]:
