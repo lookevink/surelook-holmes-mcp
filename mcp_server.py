@@ -144,6 +144,20 @@ def create_event(
 
 
 @mcp.tool()
+def get_notes(identity_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """
+    Get conversation notes (events with type 'CONVERSATION_NOTE') for a specific identity.
+    
+    Args:
+        identity_id: The UUID of the identity.
+    """
+    if not supabase:
+        return [{"error": "Supabase client not initialized"}]
+    
+    response = supabase.table("events").select("*").eq("related_identity_id", identity_id).eq("type", "CONVERSATION_NOTE").order("created_at", desc=True).limit(limit).execute()
+    return response.data
+
+@mcp.tool()
 def who_is_this(linkedin_url: str) -> Dict[str, Any]:
     """
     Identify a person from their LinkedIn URL and get their latest post.
