@@ -146,27 +146,42 @@ def who_is_this(linkedin_url: str) -> Dict[str, Any]:
         response.raise_for_status()
         data = response.json()
         
-        # Extract relevant info
-        # Note: Structure depends on API response. Assuming standard fields like 'full_name' or 'data' -> ...
-        # Based on service usage, data is usually at top level or in 'data' field.
-        # I'll return the whole data if structure is unknown, but user wants name/post.
-        # Let's try to extract cleanly if possible, or fallback to returning specific fields found.
+        # Check if wrapped in 'data' field (as seen in sample)
+        profile = data.get("data", data)
         
-        result = {
-            "full_name": data.get("full_name") or f"{data.get('first_name', '')} {data.get('last_name', '')}".strip(),
-            "headline": data.get("headline"),
-            "summary": data.get("summary"),
-            # API might not return posts in this specific endpoint unless 'include_posts' (not listed in curl) or separate call.
-            # I'll define 'latest_post' as None if not found, or maybe 'last_activity'
-            "latest_post": None 
-        }
+        # 1. Name
+        name = profile.get("full_name") or f"{profile.get('first_name', '')} {profile.get('last_name', '')}".strip()
         
-        # Attempt to find post/activity info if available in response
-        # Sometimes it's in 'recent_activity' or 'posts'
-        if "posts" in data and isinstance(data["posts"], list) and len(data["posts"]) > 0:
-            result["latest_post"] = data["posts"][0]
+        # 2. Company
+        # Look for current experience
+        current_company = "Unknown"
+        experiences = profile.get("experiences", [])
+        if experiences and isinstance(experiences, list):
+            # Sort by start date if possible, or just find first current
+            # Sample has is_current boolean
+            current_role = next((exp for exp in experiences if exp.get("is_current")), None)
+            if not current_role and experiences:
+                # If no current, take the first one (most recent usually)
+                current_role = experiences[0]
             
-        return result
+            if current_role:
+                comp = current_role.get("company", "")
+                title = current_role.get("title", "")
+                current_company = f"{title} at {comp}" if title and comp else comp or title
+        
+        # 3. Latest Post
+        # Sample doesn't have posts, but we'll check 'posts' or 'activities' if they appear
+        latest_post = None
+        posts = profile.get("posts", []) or profile.get("activities", [])
+        if posts and isinstance(posts, list) and len(posts) > 0:
+            latest_post = posts[0]
+            
+        return {
+            "name": name,
+            "company": current_company,
+            "latest_post": latest_post,
+            "about": profile.get("about") # Extra context often helpful
+        }
 
     except Exception as e:
         return {"error": f"Failed to fetch LinkedIn data: {str(e)}"}
