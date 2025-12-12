@@ -4,16 +4,6 @@ import platform
 import sys
 import requests
 
-# Suppress Pydantic deprecation warnings from dependencies (supabase/storage3)
-try:
-    from pydantic.warnings import PydanticDeprecatedSince20
-    warnings.filterwarnings("ignore", category=PydanticDeprecatedSince20)
-except ImportError:
-    pass
-# Fallback for string matching
-warnings.filterwarnings("ignore", message=".*PydanticDeprecatedSince20.*")
-warnings.filterwarnings("ignore", message=".*pydantic.config.Extra.*")
-
 from typing import List, Optional, Dict, Any
 from fastmcp import FastMCP
 from supabase import create_client, Client
@@ -168,23 +158,17 @@ def who_is_this(linkedin_url: str) -> Dict[str, Any]:
                 comp = current_role.get("company", "")
                 title = current_role.get("title", "")
                 current_company = f"{title} at {comp}" if title and comp else comp or title
-        
-        # 3. Latest Post
-        # Sample doesn't have posts, but we'll check 'posts' or 'activities' if they appear
-        latest_post = None
-        posts = profile.get("posts", []) or profile.get("activities", [])
-        if posts and isinstance(posts, list) and len(posts) > 0:
-            latest_post = posts[0]
             
         return {
             "name": name,
             "company": current_company,
-            "latest_post": latest_post,
             "about": profile.get("about") # Extra context often helpful
         }
 
     except Exception as e:
         return {"error": f"Failed to fetch LinkedIn data: {str(e)}"}
+
+
 @mcp.resource("system://info")
 def system_info() -> str:
    """
